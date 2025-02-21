@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: "Inter";
+    src: url("./assets/fonts/inter-vf.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Galgo";
+    src: url("./assets/fonts/galgo-vf.ttf") format("truetype");
+}
+
+@layer base {
+    body {
+        font-family: "Inter", sans-serif;
+    }
+
+    .galgo {
+        font-family: "Galgo", sans-serif;
+    }
+}
