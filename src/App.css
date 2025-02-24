@@ -20,6 +20,12 @@
     }
 
     .content {
-        opacity: 0
+        opacity: 0;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .content::-webkit-scrollbar {
+        display: none;
     }
 }

@@ -1,0 +1,16 @@
+{
+    "artists": {
+        "friday": [
+            {
+                "name": "Mara Selvik",
+                "image": "/assets/artists/mara-selvik.avif"
+            },
+            {
+                "name": "Mara S",
+                "image": "/assets/artists/mara-selvik.avif"
+            }
+        ],
+        "saturday": [],
+        "sunday": []
+    }
+}

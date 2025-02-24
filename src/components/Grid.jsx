@@ -6,15 +6,17 @@ import preloader from "../assets/js/preloader.js";
 import titleReveal from "../assets/js/title-reveal.js";
 import {useEffect, useState} from "react";
 import contentReveal from "../assets/js/content-reveal.js";
+import artists from "../assets/js/artists.js";
 
 export default function Grid() {
     const [randomColor, setRandomColor] = useState(0)
+    const [firstColor, setFirstColor] = useState(getRandomColor())
     const [translateY, setTranslateY] = useState('100%')
     const [translateX, setTranslateX] = useState({friday: "0", saturday: "0", sunday: "0", tickets: "0"})
     const [active, setActive] = useState({friday: false, saturday: false, sunday: false, tickets: false})
 
     useEffect(() => {
-        setRandomColor(getRandomColor())
+        setRandomColor(firstColor)
         const columns = document.querySelectorAll('.column')
         const columnsGradient = document.querySelectorAll('.column__gradient')
         const titles = document.querySelectorAll('.column__title')
@@ -48,6 +50,7 @@ export default function Grid() {
         setActive(active => {
             switch (day) {
                 case "friday":
+                    setRandomColor(firstColor + 1 > colors.length - 1 ? (firstColor + 1) - colors.length : firstColor + 1)
                     return {
                         friday: (active.friday === false && active.saturday === false) || (active.friday === true && active.saturday === true),
                         saturday: false,
@@ -56,6 +59,7 @@ export default function Grid() {
                     };
 
                 case "saturday":
+                    setRandomColor(firstColor + 2 > colors.length - 1 ? (firstColor + 2) - colors.length : firstColor + 2)
                     return {
                         friday: (active.friday === true && active.saturday === false) || (active.friday === false && active.saturday === false) || (active.saturday === true && active.sunday === true),
                         saturday: (active.saturday === false && active.sunday === false) || (active.saturday === true && active.sunday === true),
@@ -64,6 +68,7 @@ export default function Grid() {
                     };
 
                 case "sunday":
+                    setRandomColor(firstColor + 3 > colors.length - 1 ? (firstColor + 3) - colors.length : firstColor + 3)
                     return {
                         friday: (active.friday === true && active.saturday === false) || (active.friday === false && active.saturday === false) || (active.saturday === true && active.sunday === false) || (active.sunday === true && active.tickets === true),
                         saturday: (active.saturday === false && active.sunday === false) || (active.saturday === true && active.sunday === false) || (active.sunday === true && active.tickets === true),
@@ -72,6 +77,7 @@ export default function Grid() {
                     };
 
                 case "tickets":
+                    setRandomColor(firstColor + 4 > colors.length - 1 ? (firstColor + 4) - colors.length : firstColor + 4)
                     return {
                         friday: (active.friday === false && active.tickets === false) || (active.friday === true && active.tickets === false),
                         saturday: (active.saturday === false && active.tickets === false) || (active.saturday === true && active.tickets === false),
@@ -103,6 +109,7 @@ export default function Grid() {
     }, [active]);
 
     const resetActive = () => {
+        setRandomColor(firstColor)
         setActive({
             friday: false,
             saturday: false,
@@ -127,7 +134,7 @@ export default function Grid() {
             <Column translateY={translateY} color={colors[randomColor][10]}></Column>
             <Column translateY={translateY} color={colors[randomColor][11]}></Column>
             <Column translateY={translateY} color={colors[randomColor][12]}></Column>
-            <Column date={"01.25 2025"} content={"les instants chavirés / 7, rue richard lenoir / 93100 montreuil"} day={"friday"} onClick={() => handleClick("friday")} menu={1} translateX={translateX.friday} translateY={translateY} color={colors[randomColor][13]}>
+            <Column date={"01.25 2025"} content={"les instants chavirés / 7, rue richard lenoir / 93100 montreuil"} artists={artists} day={"friday"} onClick={() => handleClick("friday")} menu={1} translateX={translateX.friday} translateY={translateY} color={colors[randomColor][13]}>
                 Experience an evening where sound becomes a living, breathing entity. Accompanied by contemplative light projections, this night transforms the room into an immersive canvas of sights and sounds.
             </Column>
             <Column date={"01.26 2025"} content={"le petit bain / 7, Port de la Gare / 75013 Paris"} day={"saturday"} onClick={() => handleClick("saturday")} menu={2} translateX={translateX.saturday} translateY={translateY} color={colors[randomColor][14]}>
