@@ -18,4 +18,8 @@
     .galgo {
         font-family: "Galgo", sans-serif;
     }
+
+    .content {
+        opacity: 0
+    }
 }
