@@ -28,4 +28,8 @@
     .content::-webkit-scrollbar {
         display: none;
     }
+
+    .label-container {
+        cursor: none;
+    }
 }

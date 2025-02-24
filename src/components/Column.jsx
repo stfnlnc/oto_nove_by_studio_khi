@@ -19,7 +19,7 @@ export default function Column({
                 </div>
             }
             <div onClick={onClick} className={"column__gradient w-full h-[200lvh] transition-transform duration-1400 z-10 pointer-events-none" + (day ? " cursor-pointer" : "")} style={{background: color ? `linear-gradient(to bottom, ${color[0]}, ${color[1]}, ${color[0]})` : ""}}></div>
-            {menu && <Content artists={artists} date={date} content={content} color={color}>{children}</Content>}
+            {menu && <Content day={day} artists={artists} date={date} content={content} color={color}>{children}</Content>}
         </div>
     </>)
 }
