@@ -1,0 +1,34 @@
+
+.clip {
+    clip-path: url(#clip);
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+}
+
+.grid {
+    width: 60dvw;
+    height: 60dvh;
+    display: grid;
+    grid-template-columns: repeat(2, 50%);
+    grid-template-rows: repeat(2, 50%);
+    gap: 20px;
+}
+
+.trigger {
+    position: relative;
+    width: 500px;
+
+}
+
+
+img {
+    object-fit: cover;
+    height: 300px;
+    width: 500px;
+
+}
