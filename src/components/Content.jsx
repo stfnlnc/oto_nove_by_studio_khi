@@ -6,7 +6,7 @@ import {useGSAP} from "@gsap/react";
 import {gsap} from "gsap";
 import {ScrollTrigger} from "gsap/ScrollTrigger";
 
-export default function Content({date, content, children, artists, color, day}) {
+export default function Content({date, content, children, artists, color, day, active}) {
 
     const scrollRef = useRef(null);
 
@@ -49,7 +49,7 @@ export default function Content({date, content, children, artists, color, day}) 
         gsap.registerPlugin(ScrollTrigger)
         const contents = document.querySelectorAll('.content')
 
-        contents.forEach(content => {
+        contents.forEach((content, key) => {
             const images = content.querySelectorAll('.image')
             const clips = content.querySelectorAll('.clip')
             images.forEach((image, key) => {
@@ -57,8 +57,8 @@ export default function Content({date, content, children, artists, color, day}) 
                 gsap.to(image, {
                     scrollTrigger: {
                         trigger: image,
-                        start: "top 80%",
-                        end: "bottom center",
+                        start: "top 90%",
+                        end: "bottom 90%",
                         markers: false,
                         scroller: content,
                         onEnter: () => {
@@ -79,7 +79,7 @@ export default function Content({date, content, children, artists, color, day}) 
                                 ease: "expo.inOut",
                                 duration: 1.4,
                                 stagger: {
-                                    from: "edges",
+                                    from: "center",
                                     each: 0.1,
                                     ease: "sine.out",
                                 }
@@ -88,19 +88,70 @@ export default function Content({date, content, children, artists, color, day}) 
                     }
                 })
             })
+            const reflects1 = document.querySelectorAll('.reflect-1')
+            const reflects2 = document.querySelectorAll('.reflect-2')
+            const reflects3 = document.querySelectorAll('.reflect-3')
+            gsap.to(reflects1[key], {
+                y: "2.5rem",
+                duration: 1.2,
+                scrollTrigger: {
+                    trigger: reflects1[key],
+                    scroller: content,
+                    start: "top top",
+                    end: "bottom top",
+                    markers: false,
+                    scrub: 1,
+                    invalidateOnRefresh: true
+                }
+            })
+            gsap.to(reflects2[key], {
+                y: "4rem",
+                duration: 1.2,
+                scrollTrigger: {
+                    trigger: reflects2[key],
+                    scroller: content,
+                    start: "top top",
+                    end: "bottom top",
+                    markers: false,
+                    scrub: 1,
+                    invalidateOnRefresh: true
+                }
+            })
+            gsap.to(reflects3[key], {
+                y: "5rem",
+                duration: 1.2,
+                scrollTrigger: {
+                    trigger: reflects3[key],
+                    scroller: content,
+                    start: "top top",
+                    end: "bottom top",
+                    markers: false,
+                    scrub: 1,
+                    invalidateOnRefresh: true
+                }
+            })
         })
-
-
     }, [scrollRef])
 
     return (<>
-        <div className={"grid grid-cols-17 w-screen h-[100lvh] absolute top-0 left-full z-50 bg-white"}>
-            <div ref={scrollRef} className="content col-span-12 p-5 overflow-y-scroll">
-                {date && <div className="label-container relative flex flex-row items-start justify-between border-b border-black pt-5 mb-5">
+        <div className={"grid md:grid-cols-12 lg:grid-cols-17 w-screen h-[100lvh] absolute top-0 left-full z-50 bg-white"}>
+            <div ref={scrollRef} className="content md:col-span-7 lg:col-span-12 p-5 overflow-y-scroll">
+                {date && <div className="label-container relative border-b border-black pb-25 mb-5">
                     <Label>{day}</Label>
-                    {date.split(" ").map(textDate => <div key={textDate} className={"galgo text-[22vw] leading-[65%]"}>{textDate}</div>)}
+                    <div className="relative z-30 flex flex-row items-start justify-between bg-white pt-5" style={{clipPath: "inset(0% 0% 10% 0%)"}}>
+                        {date.split(" ").map(textDate => <div key={textDate} className={"galgo text-[30rem] leading-[70%]"}>{textDate}</div>)}
+                    </div>
+                    <div className="reflect-1 absolute z-20 top-0 left-0 w-full flex flex-row items-start justify-between bg-white pt-5" style={{clipPath: "inset(0% 0% 10% 0%)"}}>
+                        {date.split(" ").map(textDate => <div key={textDate} className={"galgo text-[30rem] leading-[70%]"}>{textDate}</div>)}
+                    </div>
+                    <div className="reflect-2 absolute z-10 top-0 left-0 w-full flex flex-row items-start justify-between bg-white pt-5" style={{clipPath: "inset(0% 0% 10% 0%)"}}>
+                        {date.split(" ").map(textDate => <div key={textDate} className={"galgo text-[30rem] leading-[70%]"}>{textDate}</div>)}
+                    </div>
+                    <div className="reflect-3 absolute z-5 top-0 left-0 w-full flex flex-row items-start justify-between bg-white pt-5" style={{clipPath: "inset(0% 0% 10% 0%)"}}>
+                        {date.split(" ").map(textDate => <div key={textDate} className={"galgo text-[30rem] leading-[70%]"}>{textDate}</div>)}
+                    </div>
                 </div>}
-                <div className={"sticky top-0 h-[80lvh] flex flex-row items-start justify-start gap-[5vw] pb-5 z-50 mix-blend-difference invert-[100] pointer-events-none"}>
+                <div className={"sticky top-0 h-[80lvh] flex flex-row items-start justify-start gap-[5vw] pb-5 pointer-events-none mix-blend-difference invert-[100] z-50"}>
                     <div className={"flex flex-col gap-0 shrink-0 pointer-events-auto"}>
                         <Buy href={""}>Buy tickets</Buy>
                         <Buy href={""}>Buy pass</Buy>
