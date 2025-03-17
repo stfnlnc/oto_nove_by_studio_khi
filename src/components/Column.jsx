@@ -16,7 +16,11 @@ export default function Column({
     return (<>
         <div className={"column relative w-full h-[100lvh] transition-transform duration-1000 z-10 " + className} style={{transform: `translate(${translateX ? translateX : "0"}, ${translateY})`}}>
             {day &&
-                <div className={"column__title absolute top-18 w-32 text-right left-1/2 uppercase text-[1.25vw] text-white -rotate-90 z-30 -translate-x-1/2 transition-all duration-1000 pointer-events-none"} style={{transform: 'translate(-50%, 0)', opacity: 0}}>
+                <div className={"column__title absolute top-[1.25vw] w-fit text-left left-1/2 uppercase text-xl xl:text-[1.25vw] text-white -rotate-180 z-30 -translate-x-1/2 transition-all duration-1000 pointer-events-none"} style={{
+                    writingMode: 'vertical-rl',
+                    transform: 'translate(-50%, 0)',
+                    opacity: 0
+                }}>
                     {day}
                 </div>
             }
