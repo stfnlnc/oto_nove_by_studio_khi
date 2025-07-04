@@ -1,14 +1,16 @@
-import {gsap} from "gsap";
-import {SplitText} from "gsap/SplitText";
+import { gsap } from "gsap";
 
-export default function loader(loader) {
-    gsap.registerPlugin(SplitText)
-
-    const split = new SplitText(loader, {type: "chars"})
-    gsap.to(split.chars, {
-        transform: "translate(0, -65%)",
-        ease: "power4.inOut",
-        duration: 1.2,
-        stagger: 0.08
-    })
+export default function loader(loaders) {
+    gsap.fromTo(
+        loaders,
+        {
+            clipPath: "inset(100% 0% 0% 0%)"
+        },
+        {
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 1,
+            ease: "power4.inOut",
+            stagger: 0.4
+        }
+    );
 }

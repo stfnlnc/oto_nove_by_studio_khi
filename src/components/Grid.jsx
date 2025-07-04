@@ -6,10 +6,11 @@ import preloader from "../assets/js/preloader.js";
 import titleReveal from "../assets/js/title-reveal.js";
 import contentReveal from "../assets/js/content-reveal.js";
 import artists from "../assets/js/artists.js";
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import loader from "../assets/js/loader.js";
-import {useGSAP} from "@gsap/react";
-import {gsap} from "gsap";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { fadeInAudio, fadeOutAudio } from "../assets/js/fade.js";
 
 export default function Grid() {
     const [randomColor, setRandomColor] = useState(0);
@@ -28,48 +29,78 @@ export default function Grid() {
         tickets: false
     });
     const audioRef = useRef(null);
-    const audioRefTransition = useRef(null);
+    const audioRefLow = useRef(null);
+    const audioRefFriday = useRef(null);
+    const audioRefSaturday = useRef(null);
+    const audioRefSunday = useRef(null);
+    const audioRefTickets = useRef(null);
+    const audioRefHome = useRef(null);
+    const audioRefLink = useRef(null);
     const playRef = useRef(null);
     const audioContextRef = useRef(null);
     const [play, setPlay] = useState(false);
 
     useEffect(() => {
         if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioContextRef.current.createMediaElementSource(audioRef.current);
-            const filter = audioContextRef.current.createBiquadFilter();
-            window.addEventListener('mousemove', (e) => {
-                    filter.frequency.value = (e.clientX * 2) + 100;
-                }
+            audioContextRef.current = new (window.AudioContext ||
+                window.webkitAudioContext)();
+            const source = audioContextRef.current.createMediaElementSource(
+                audioRef.current
             );
+            const filter = audioContextRef.current.createBiquadFilter();
+            window.addEventListener("mousemove", (e) => {
+                filter.frequency.value =
+                    (e.clientX / window.innerWidth) * 100 * 6 + 10;
+            });
             filter.Q.value = 1;
             source.connect(filter);
             filter.connect(audioContextRef.current.destination);
+            audioRef.current.volume = 0;
         }
+
+        const buyLinks = document.querySelectorAll(".buy-links");
+        buyLinks.forEach((link) => {
+            link.addEventListener("click", () => {
+                if (!audioRef.current.paused) {
+                    audioRef.current.pause();
+                    audioRefLow.current.pause();
+                    audioRefLink.current.play();
+                    playRef.current.innerHTML = "Sound On";
+                }
+            });
+        });
     }, []);
 
     const playAudio = async () => {
-
-
         if (audioContextRef.current.state === "suspended") {
             await audioContextRef.current.resume();
         }
-        setPlay(prevPlay => {
+        setPlay((prevPlay) => {
             if (!prevPlay) {
                 audioRef.current.play();
-                playRef.current.innerHTML = "Sound Off"
+                audioRefLow.current.play();
+                if (
+                    active.friday ||
+                    active.saturday ||
+                    active.sunday ||
+                    active.tickets
+                ) {
+                    fadeInAudio(audioRefLow.current);
+                    fadeOutAudio(audioRef.current);
+                } else {
+                    fadeInAudio(audioRef.current);
+                }
+                playRef.current.innerHTML = "Sound Off";
             } else {
-                audioRef.current.pause();
-                audioRef.current.load();
-                playRef.current.innerHTML = "Sound On"
+                fadeOutAudio(audioRef.current);
+                fadeOutAudio(audioRefLow.current);
+                playRef.current.innerHTML = "Sound On";
             }
             return !prevPlay;
         });
     };
 
-
     useEffect(() => {
-
         setRandomColor(firstColor);
         const columns = document.querySelectorAll(".column");
         const columnsGradient = document.querySelectorAll(".column__gradient");
@@ -97,22 +128,26 @@ export default function Grid() {
             columnsGradient.forEach((col) => {
                 col.classList.remove("pointer-events-none");
             });
-            loader(document.querySelector("#loader"));
+            loader(document.querySelectorAll(".loader"));
             gsap.to(playRef.current, {
                 bottom: "1.4rem",
                 duration: 3,
                 ease: "power4.inOut"
-            })
+            });
         });
     }, []);
 
     const handleClick = (day) => {
-        audioRefTransition.current.pause();
-        audioRefTransition.current.load();
-        audioRefTransition.current.play();
         setActive((active) => {
+            if (play) {
+                fadeInAudio(audioRefLow.current);
+            }
             switch (day) {
                 case "friday":
+                    if (play) {
+                        audioRefFriday.current.volume = 0.1;
+                        audioRefFriday.current.play();
+                    }
                     setRandomColor(
                         firstColor + 1 > colors.length - 1
                             ? firstColor + 1 - colors.length
@@ -130,6 +165,10 @@ export default function Grid() {
                     };
 
                 case "saturday":
+                    if (play) {
+                        audioRefSaturday.current.volume = 0.1;
+                        audioRefSaturday.current.play();
+                    }
                     setRandomColor(
                         firstColor + 2 > colors.length - 1
                             ? firstColor + 2 - colors.length
@@ -153,6 +192,10 @@ export default function Grid() {
                     };
 
                 case "sunday":
+                    if (play) {
+                        audioRefSunday.current.volume = 0.1;
+                        audioRefSunday.current.play();
+                    }
                     setRandomColor(
                         firstColor + 3 > colors.length - 1
                             ? firstColor + 3 - colors.length
@@ -181,6 +224,10 @@ export default function Grid() {
                     };
 
                 case "tickets":
+                    if (play) {
+                        audioRefTickets.current.volume = 0.1;
+                        audioRefTickets.current.play();
+                    }
                     setRandomColor(
                         firstColor + 4 > colors.length - 1
                             ? firstColor + 4 - colors.length
@@ -211,6 +258,10 @@ export default function Grid() {
         });
     };
 
+    const [translateMenu, setTranslateMenu] = useState("0");
+    const [menuName, setMenuName] = useState("menu");
+    const [activeMenu, setActiveMenu] = useState(false);
+
     useEffect(() => {
         const contentWidth = document.querySelector(".content").offsetWidth;
         setTranslateX({
@@ -219,17 +270,6 @@ export default function Grid() {
             sunday: active.sunday ? `-${contentWidth}px` : "0",
             tickets: active.tickets ? `-${contentWidth}px` : "0"
         });
-        if (
-            active.friday ||
-            active.saturday ||
-            active.sunday ||
-            active.tickets
-        ) {
-            audioRef.current.pause();
-            audioRef.current.load();
-        } else {
-            play ? audioRef.current.play() : ''
-        }
     }, [active]);
 
     useGSAP(() => {
@@ -238,26 +278,48 @@ export default function Grid() {
             active.friday ||
             active.saturday ||
             active.sunday ||
-            active.tickets
+            active.tickets ||
+            activeMenu
         ) {
-            gsap.to(loader, {
-                x: "-100%",
-                duration: 0.6
+            gsap.to(".loader-container", {
+                x: "-150%",
+                duration: 0.8
             });
+            fadeOutAudio(audioRef.current);
         } else {
-            gsap.to(loader, {
+            gsap.to(".loader-container", {
                 x: "0",
                 duration: 0.8,
                 delay: 0.2
             });
             setRandomColor(firstColor);
+            if (play) {
+                fadeInAudio(audioRef.current);
+                fadeOutAudio(audioRefLow.current);
+            }
         }
-    }, [active]);
+    }, [active, activeMenu]);
+
+    useEffect(() => {
+        const containers = document.querySelectorAll(".label-container");
+        const label = document.querySelector(".label");
+        containers.forEach((container, key) => {
+            container.addEventListener("mouseenter", () => {
+                label.classList.remove("scale-0");
+                label.innerText = container.dataset.content;
+            });
+            container.addEventListener("mouseleave", () => {
+                label.classList.add("scale-0");
+            });
+            container.addEventListener("mousemove", (e) => {
+                label.style.position = "fixed";
+                label.style.left = e.screenX + window.innerWidth + "px";
+                label.style.top = e.pageY + "px";
+            });
+        });
+    }, []);
 
     const resetActive = () => {
-        audioRefTransition.current.pause();
-        audioRefTransition.current.load();
-        audioRefTransition.current.play();
         setRandomColor(firstColor);
         setActive({
             friday: false,
@@ -267,16 +329,59 @@ export default function Grid() {
         });
     };
 
+    const resetMenu = () => {};
+
+    const handleMenu = () => {
+        setActiveMenu((a) => !a);
+        !activeMenu ? setTranslateMenu("-600%") : setTranslateMenu("0");
+        !activeMenu ? setMenuName("close") : setMenuName("menu");
+        if (!activeMenu) {
+            setRandomColor(
+                firstColor + 4 > colors.length - 1
+                    ? firstColor + 4 - colors.length
+                    : firstColor + 4
+            );
+        }
+    };
+
     return (
         <>
-            <section className="flex flex-col items-center justify-center lg:hidden w-full h-[100lvh] uppercase text-black">
-                <div>
-                    Work in progress
-                </div>
-                <div>
-                    Minimum display size 1024px
-                </div>
+            <section className="grid grid-cols-7 lg:hidden relative w-full h-[100lvh] overflow-hidden uppercase text-black">
+                <Column
+                    day={"home"}
+                    translateY={translateY}
+                    onClick={resetMenu}
+                    color={colors[randomColor][0]}
+                ></Column>
+                <Column
+                    translateY={translateY}
+                    color={colors[randomColor][1]}
+                ></Column>
+                <Column
+                    translateY={translateY}
+                    color={colors[randomColor][2]}
+                ></Column>
+                <Column
+                    translateY={translateY}
+                    color={colors[randomColor][3]}
+                ></Column>
+                <Column
+                    translateY={translateY}
+                    color={colors[randomColor][4]}
+                ></Column>
+                <Column
+                    translateY={translateY}
+                    color={colors[randomColor][5]}
+                ></Column>
+                <Column
+                    day={menuName}
+                    onClick={handleMenu}
+                    translateY={translateY}
+                    color={colors[randomColor][6]}
+                    translateX={translateMenu}
+                ></Column>
             </section>
+
             <section
                 className={
                     "hidden lg:grid grid-cols-17 w-full h-[100lvh] overflow-hidden"
@@ -289,7 +394,6 @@ export default function Grid() {
                     color={colors[randomColor][0]}
                 ></Column>
                 <Column
-                    onClick={playAudio}
                     translateY={translateY}
                     color={colors[randomColor][1]}
                 ></Column>
@@ -422,14 +526,46 @@ export default function Grid() {
                     Over three days, the festival invites audiences to
                     experience bold artistic expressions that push the
                     boundaries of sound, light, and space.
+                    <div className="w-full py-5 mb-5 border-b border-black"></div>
+                    Oto Nove is a graphic experimentation by Studio Khi. <br />
+                    This digital experience explores the intersection of visual
+                    and sound perception. <br />
+                    <br />
+                    Design & Code by{" "}
+                    <a
+                        className={
+                            "underline underline-offset-4 pointer-events-auto select-none"
+                        }
+                        href="https://studiokhi.com"
+                        target={"_blank"}
+                    >
+                        Studio Khi
+                    </a>
+                    . <br />
+                    Original Soundtrack by Stefan Lancelot.
                 </Column>
                 <div
                     ref={playRef}
                     onClick={playAudio}
-                    className={"fixed -bottom-full right-[1.94vw] cursor-pointer select-none label z-400 text-[1.25vw] uppercase px-[0.62vw] bg-white rounded-[0.375vw] border border-black whitespace-nowrap rotate-180"} style={{writingMode: 'vertical-lr'}}>Sound on
+                    className={
+                        "fixed -bottom-full right-[1.94vw] cursor-pointer select-none z-400 text-[1.25vw] uppercase px-[0.62vw] bg-white rounded-[0.375vw] border border-black whitespace-nowrap rotate-180"
+                    }
+                    style={{ writingMode: "vertical-lr" }}
+                >
+                    Sound on
                 </div>
-                <audio ref={audioRef} src="/sounds/page.wav" loop></audio>
-                <audio ref={audioRefTransition} src="/sounds/transition.wav"></audio>
+                <audio ref={audioRef} src="/sounds/loop.wav" loop></audio>
+                <audio
+                    ref={audioRefLow}
+                    src="/sounds/loop-low.wav"
+                    loop
+                ></audio>
+                <audio ref={audioRefFriday} src="/sounds/open.wav"></audio>
+                <audio ref={audioRefSaturday} src="/sounds/open.wav"></audio>
+                <audio ref={audioRefSunday} src="/sounds/open.wav"></audio>
+                <audio ref={audioRefTickets} src="/sounds/open.wav"></audio>
+                <audio ref={audioRefHome} src="/sounds/open.wav"></audio>
+                <audio ref={audioRefLink} src="/sounds/crash.wav"></audio>
             </section>
         </>
     );

@@ -1,5 +1,14 @@
-export default function Label({children}) {
-    return (<>
-        <div className={"label absolute top-1/2 left-1/2 z-200 text-[1.25vw] uppercase px-[0.62vw] bg-white rounded-[0.375vw] border border-black opacity-0 whitespace-nowrap"}>{children}</div>
-    </>)
+export default function Label({ className, children }) {
+    return (
+        <>
+            <div
+                className={
+                    className +
+                    " pointer-events-none fixed top-0 left-0 z-9999 text-[1.25vw] inter leading-loose uppercase px-[0.62vw] py-0 bg-white text-black rounded-[0.375vw] border border-black scale-0 transition-[transform] duration-300 whitespace-nowrap"
+                }
+            >
+                {children}
+            </div>
+        </>
+    );
 }
