@@ -11,6 +11,11 @@
 }
 
 @layer base {
+    html,
+    body {
+        overscroll-behavior: none;
+    }
+
     body {
         font-family: "Inter", sans-serif;
     }
@@ -33,8 +38,8 @@
         display: none;
     }
 
-    .label-container, .label-loader-container {
+    .label-container,
+    .label-loader-container {
         cursor: none;
     }
-
 }

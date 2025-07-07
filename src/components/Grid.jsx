@@ -1,4 +1,6 @@
 import Column from "./Column.jsx";
+import MenuLink from "./MenuLink.jsx";
+import MenuLabel from "./MenuLabel.jsx";
 import colors from "../assets/js/colors.js";
 import getRandomColor from "../assets/js/get-random-color.js";
 import moveColumnGradient from "../assets/js/move-column-gradient.js";
@@ -278,8 +280,7 @@ export default function Grid() {
             active.friday ||
             active.saturday ||
             active.sunday ||
-            active.tickets ||
-            activeMenu
+            active.tickets
         ) {
             gsap.to(".loader-container", {
                 x: "-150%",
@@ -298,7 +299,7 @@ export default function Grid() {
                 fadeOutAudio(audioRefLow.current);
             }
         }
-    }, [active, activeMenu]);
+    }, [active]);
 
     useEffect(() => {
         const containers = document.querySelectorAll(".label-container");
@@ -313,7 +314,7 @@ export default function Grid() {
             });
             container.addEventListener("mousemove", (e) => {
                 label.style.position = "fixed";
-                label.style.left = e.screenX + window.innerWidth + "px";
+                label.style.left = e.pageX + "px";
                 label.style.top = e.pageY + "px";
             });
         });
@@ -329,24 +330,84 @@ export default function Grid() {
         });
     };
 
-    const resetMenu = () => {};
+    const resetMenu = () => {
+        const menuMobile = document.getElementById("menu-mobile");
+        const colMoves = document.querySelectorAll(".col-move");
+        const days = document.querySelectorAll(
+            "#friday, #saturday, #sunday, #tickets"
+        );
+        setActiveMenu(false);
+        setTranslateMenu("0");
+        setMenuName("menu");
+        days.forEach((day) => {
+            setTimeout(() => {
+                day.classList.add("opacity-0");
+                day.classList.add("pointer-events-none");
+            }, 800);
+        });
+        colMoves.forEach((col) => {
+            col.classList.remove("translate-x-[600%]");
+        });
+        gsap.to(".loader-container", {
+            x: "0",
+            duration: 0.8,
+            delay: 0.2
+        });
+        setRandomColor(firstColor);
+    };
 
-    const handleMenu = () => {
+    const handleMenu = (link, name) => {
+        const menuMobile = document.getElementById("menu-mobile");
+        const colMoves = document.querySelectorAll(".col-move");
+        const days = document.querySelectorAll(
+            "#friday, #saturday, #sunday, #tickets"
+        );
         setActiveMenu((a) => !a);
         !activeMenu ? setTranslateMenu("-600%") : setTranslateMenu("0");
         !activeMenu ? setMenuName("close") : setMenuName("menu");
+        menuMobile.classList.remove("-translate-x-6/7");
         if (!activeMenu) {
             setRandomColor(
                 firstColor + 4 > colors.length - 1
                     ? firstColor + 4 - colors.length
                     : firstColor + 4
             );
+            menuMobile.classList.add("-translate-x-6/7");
+            gsap.to(".loader-container", {
+                x: "-150%",
+                duration: 0.8
+            });
+            colMoves.forEach((col) => {
+                col.classList.remove("translate-x-[600%]");
+            });
+            days.forEach((day) => {
+                setTimeout(() => {
+                    day.classList.add("opacity-0");
+                    day.classList.add("pointer-events-none");
+                }, 500);
+            });
+        } else {
+            if (!link) {
+                gsap.to(".loader-container", {
+                    x: "0",
+                    duration: 0.8,
+                    delay: 0.2
+                });
+                setRandomColor(firstColor);
+            } else {
+                colMoves.forEach((col) => {
+                    col.classList.add("translate-x-[600%]");
+                });
+                const content = document.getElementById(name);
+                content.classList.remove("opacity-0");
+                content.classList.remove("pointer-events-none");
+            }
         }
     };
 
     return (
         <>
-            <section className="grid grid-cols-7 lg:hidden relative w-full h-[100lvh] overflow-hidden uppercase text-black">
+            <section className="grid grid-cols-7 lg:hidden relative w-full h-[100svh] overflow-hidden uppercase text-black">
                 <Column
                     day={"home"}
                     translateY={translateY}
@@ -354,32 +415,160 @@ export default function Grid() {
                     color={colors[randomColor][0]}
                 ></Column>
                 <Column
+                    className={"col-move"}
                     translateY={translateY}
                     color={colors[randomColor][1]}
                 ></Column>
                 <Column
+                    className={"col-move"}
                     translateY={translateY}
                     color={colors[randomColor][2]}
                 ></Column>
                 <Column
+                    className={"col-move"}
                     translateY={translateY}
                     color={colors[randomColor][3]}
                 ></Column>
                 <Column
+                    className={"col-move"}
                     translateY={translateY}
                     color={colors[randomColor][4]}
                 ></Column>
                 <Column
+                    className={"col-move"}
                     translateY={translateY}
                     color={colors[randomColor][5]}
                 ></Column>
                 <Column
                     day={menuName}
-                    onClick={handleMenu}
+                    onClick={() => {
+                        handleMenu(false);
+                    }}
                     translateY={translateY}
                     color={colors[randomColor][6]}
                     translateX={translateMenu}
                 ></Column>
+                <div
+                    id="menu-mobile"
+                    className="p-4 fixed top-0 left-full w-screen h-[100svh] bg-white z-20 transition-transform duration-1000"
+                >
+                    <div
+                        className={
+                            "flex flex-col gap-2 justify-start items-start h-full"
+                        }
+                    >
+                        <MenuLink
+                            onClick={() => {
+                                handleMenu(true, "friday");
+                            }}
+                        >
+                            Friday
+                        </MenuLink>
+                        <MenuLink
+                            onClick={() => {
+                                handleMenu(true, "saturday");
+                            }}
+                        >
+                            Saturday
+                        </MenuLink>
+                        <MenuLink
+                            onClick={() => {
+                                handleMenu(true, "sunday");
+                            }}
+                        >
+                            Sunday
+                        </MenuLink>
+                        <MenuLink
+                            onClick={() => {
+                                handleMenu(true, "tickets");
+                            }}
+                        >
+                            Tickets & Infos
+                        </MenuLink>
+                        <MenuLabel className={"mt-auto"}>
+                            Contemporary
+                        </MenuLabel>
+                        <MenuLabel>Music & Sounds</MenuLabel>
+                        <MenuLabel>January 25 to 27, 2025</MenuLabel>
+                    </div>
+                </div>
+                <div
+                    id="friday"
+                    className="pointer-events-none overflow-y-auto opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white transition-transform duration-1000 flex flex-col"
+                >
+                    <MenuLabel>Friday</MenuLabel>
+                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                        01.25. <br />
+                        2025
+                    </div>
+                    <div>
+                        Lorem ipsum dolor sit amet, consectetur adipisicing
+                        elit. Odit nisi, asperiores voluptatum eum nihil
+                        quisquam aut distinctio recusandae porro, tenetur
+                        eveniet optio. Quas distinctio cumque molestias! Modi
+                        non quas excepturi. Lorem ipsum dolor sit amet,
+                        consectetur adipisicing elit. Odit nisi, asperiores
+                        voluptatum eum nihil quisquam aut distinctio recusandae
+                        porro, tenetur eveniet optio. Quas distinctio cumque
+                        molestias! Modi non quas excepturi. Lorem ipsum dolor
+                        sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. Lorem ipsum
+                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. Lorem ipsum
+                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. Lorem ipsum
+                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. Lorem ipsum
+                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. Lorem ipsum
+                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi. recusandae
+                        porro, tenetur eveniet optio. Quas distinctio cumque
+                        molestias! Modi non quas excepturi. Lorem ipsum dolor
+                        sit amet, consectetur adipisicing elit. Odit nisi,
+                        asperiores voluptatum eum nihil quisquam aut distinctio
+                        recusandae porro, tenetur eveniet optio. Quas distinctio
+                        cumque molestias! Modi non quas excepturi.
+                    </div>
+                </div>
+                <div
+                    id="saturday"
+                    className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
+                >
+                    <MenuLabel>Saturday</MenuLabel>
+                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                        01.26. <br />
+                        2025
+                    </div>
+                </div>
+                <div
+                    id="sunday"
+                    className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
+                >
+                    <MenuLabel>Sunday</MenuLabel>
+                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                        01.27. <br />
+                        2025
+                    </div>
+                </div>
+                <div
+                    id="tickets"
+                    className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
+                >
+                    <MenuLabel>Tickets & Infos</MenuLabel>
+                </div>
             </section>
 
             <section

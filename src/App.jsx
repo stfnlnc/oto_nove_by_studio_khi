@@ -7,7 +7,7 @@ import { gsap } from "gsap";
 
 function App() {
     useGSAP(() => {
-        const links = document.querySelectorAll("a");
+        const links = document.querySelectorAll(".buy-links, .back-home");
         const transitions = document.querySelectorAll(".transitions");
         links.forEach((link) => {
             link.addEventListener("click", (e) => {
