@@ -1,17 +1,16 @@
-export default function MenuLink({ children, href, onClick }) {
+export default function ContentLink({ children, href }) {
     return (
         <>
             <a
                 href={href}
-                onClick={onClick}
                 className={
-                    "menu-link text-[1.25rem] leading-[100%] uppercase flex flex-row items-center gap-2"
+                    "buy-links text-[1.25rem] leading-[100%] uppercase flex flex-row items-center gap-2"
                 }
             >
                 <div className="relative overflow-hidden">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className={"w-[1.4rem]"}
+                        className={"w-[1.2rem]"}
                         viewBox="0 0 35 36"
                         fill="none"
                     >

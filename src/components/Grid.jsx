@@ -1,5 +1,6 @@
 import Column from "./Column.jsx";
 import MenuLink from "./MenuLink.jsx";
+import ContentLink from "./ContentLink.jsx";
 import MenuLabel from "./MenuLabel.jsx";
 import colors from "../assets/js/colors.js";
 import getRandomColor from "../assets/js/get-random-color.js";
@@ -41,6 +42,9 @@ export default function Grid() {
     const playRef = useRef(null);
     const audioContextRef = useRef(null);
     const [play, setPlay] = useState(false);
+    const canvasRef = useRef(null);
+    const analyserRef = useRef(null);
+    const containerRef = useRef(null);
 
     useEffect(() => {
         if (!audioContextRef.current) {
@@ -49,29 +53,83 @@ export default function Grid() {
             const source = audioContextRef.current.createMediaElementSource(
                 audioRef.current
             );
+
             const filter = audioContextRef.current.createBiquadFilter();
             window.addEventListener("mousemove", (e) => {
                 filter.frequency.value =
-                    (e.clientX / window.innerWidth) * 100 * 6 + 10;
+                    (e.clientX / window.innerWidth) * 300 * 6 + 10;
             });
             filter.Q.value = 1;
-            source.connect(filter);
-            filter.connect(audioContextRef.current.destination);
-            audioRef.current.volume = 0;
-        }
 
-        const buyLinks = document.querySelectorAll(".buy-links");
-        buyLinks.forEach((link) => {
-            link.addEventListener("click", () => {
-                if (!audioRef.current.paused) {
-                    audioRef.current.pause();
-                    audioRefLow.current.pause();
-                    audioRefLink.current.play();
-                    playRef.current.innerHTML = "Sound On";
-                }
+            // ✅ AnalyserNode
+            const analyser = audioContextRef.current.createAnalyser();
+            analyser.fftSize = 512;
+            analyserRef.current = analyser;
+
+            // ✅ Connect source → filter → analyser → destination
+            source.connect(filter);
+            filter.connect(analyser);
+            analyser.connect(audioContextRef.current.destination);
+
+            audioRef.current.volume = 0;
+
+            draw(); // Lancer le visualizer
+
+            const buyLinks = document.querySelectorAll(".buy-links");
+            buyLinks.forEach((link) => {
+                link.addEventListener("click", () => {
+                    if (!audioRef.current.paused) {
+                        audioRef.current.pause();
+                        audioRefLow.current.pause();
+                        audioRefLink.current.play();
+                        playRef.current.innerHTML = "Sound On";
+                    }
+                });
             });
-        });
+        }
     }, []);
+
+    const draw = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        const analyser = analyserRef.current;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const renderFrame = () => {
+            requestAnimationFrame(renderFrame);
+
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cutoff = Math.floor(bufferLength * 0.5);
+            const bassLimit = 0.3; // 30% du spectre
+            const barWidth = (canvas.width / cutoff) * 10;
+            let x = 0;
+
+            for (let i = 0; i < cutoff; i++) {
+                let barHeight = dataArray[i];
+
+                // ✅ Limite les basses
+                if (i <= cutoff * bassLimit) {
+                    barHeight *= 0.5; // Ne jamais dépasser 50%
+                }
+
+                // ✅ Boost médiums uniquement
+                if (i >= cutoff * 0.3 && i <= cutoff * 0.6) {
+                    barHeight *= 2.0; // Boost médiums
+                }
+
+                ctx.fillStyle = "rgb(255, 255, 255)";
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+                x += barWidth + 1.1;
+            }
+        };
+
+        renderFrame();
+    };
 
     const playAudio = async () => {
         if (audioContextRef.current.state === "suspended") {
@@ -92,15 +150,40 @@ export default function Grid() {
                 } else {
                     fadeInAudio(audioRef.current);
                 }
-                playRef.current.innerHTML = "Sound Off";
+                playRef.current.innerHTML = "Pause sound";
             } else {
                 fadeOutAudio(audioRef.current);
                 fadeOutAudio(audioRefLow.current);
-                playRef.current.innerHTML = "Sound On";
+                playRef.current.innerHTML = "Play sound";
             }
             return !prevPlay;
         });
     };
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const button = playRef.current;
+
+        const resizeCanvas = () => {
+            const buttonHeight = button.clientHeight;
+
+            canvas.width = buttonHeight;
+            canvas.height = containerRef.current.clientHeight;
+        };
+
+        resizeCanvas();
+
+        // Observe la taille du bouton
+        const observer = new ResizeObserver(resizeCanvas);
+        observer.observe(button);
+
+        window.addEventListener("resize", resizeCanvas);
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", resizeCanvas);
+        };
+    }, []);
 
     useEffect(() => {
         setRandomColor(firstColor);
@@ -131,7 +214,7 @@ export default function Grid() {
                 col.classList.remove("pointer-events-none");
             });
             loader(document.querySelectorAll(".loader"));
-            gsap.to(playRef.current, {
+            gsap.to(containerRef.current, {
                 bottom: "1.4rem",
                 duration: 3,
                 ease: "power4.inOut"
@@ -155,6 +238,8 @@ export default function Grid() {
                             ? firstColor + 1 - colors.length
                             : firstColor + 1
                     );
+                    playRef.current.classList.add("text-white");
+                    playRef.current.classList.add("border-white");
                     return {
                         friday:
                             (active.friday === false &&
@@ -176,6 +261,8 @@ export default function Grid() {
                             ? firstColor + 2 - colors.length
                             : firstColor + 2
                     );
+                    playRef.current.classList.add("text-white");
+                    playRef.current.classList.add("border-white");
                     return {
                         friday:
                             (active.friday === true &&
@@ -203,6 +290,8 @@ export default function Grid() {
                             ? firstColor + 3 - colors.length
                             : firstColor + 3
                     );
+                    playRef.current.classList.add("text-white");
+                    playRef.current.classList.add("border-white");
                     return {
                         friday:
                             (active.friday === true &&
@@ -235,6 +324,8 @@ export default function Grid() {
                             ? firstColor + 4 - colors.length
                             : firstColor + 4
                     );
+                    playRef.current.classList.remove("text-white");
+                    playRef.current.classList.remove("border-white");
                     return {
                         friday:
                             (active.friday === false &&
@@ -272,6 +363,10 @@ export default function Grid() {
             sunday: active.sunday ? `-${contentWidth}px` : "0",
             tickets: active.tickets ? `-${contentWidth}px` : "0"
         });
+        if (!active.tickets) {
+            playRef.current.classList.add("text-white");
+            playRef.current.classList.add("border-white");
+        }
     }, [active]);
 
     useGSAP(() => {
@@ -322,6 +417,8 @@ export default function Grid() {
 
     const resetActive = () => {
         setRandomColor(firstColor);
+        playRef.current.classList.add("text-white");
+        playRef.current.classList.add("border-white");
         setActive({
             friday: false,
             saturday: false,
@@ -336,6 +433,7 @@ export default function Grid() {
         const days = document.querySelectorAll(
             "#friday, #saturday, #sunday, #tickets"
         );
+        menuMobile.classList.remove("-translate-x-6/7");
         setActiveMenu(false);
         setTranslateMenu("0");
         setMenuName("menu");
@@ -494,80 +592,234 @@ export default function Grid() {
                 </div>
                 <div
                     id="friday"
-                    className="pointer-events-none overflow-y-auto opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white transition-transform duration-1000 flex flex-col"
+                    className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white transition-transform duration-1000 flex flex-col"
                 >
-                    <MenuLabel>Friday</MenuLabel>
-                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                    <MenuLabel
+                        className={
+                            "relative z-60 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
+                        Friday
+                    </MenuLabel>
+                    <div
+                        className={
+                            "relative z-60 galgo text-[11.25rem] leading-[70%] mt-8 border-b mb-8 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
                         01.25. <br />
                         2025
                     </div>
-                    <div>
-                        Lorem ipsum dolor sit amet, consectetur adipisicing
-                        elit. Odit nisi, asperiores voluptatum eum nihil
-                        quisquam aut distinctio recusandae porro, tenetur
-                        eveniet optio. Quas distinctio cumque molestias! Modi
-                        non quas excepturi. Lorem ipsum dolor sit amet,
-                        consectetur adipisicing elit. Odit nisi, asperiores
-                        voluptatum eum nihil quisquam aut distinctio recusandae
-                        porro, tenetur eveniet optio. Quas distinctio cumque
-                        molestias! Modi non quas excepturi. Lorem ipsum dolor
-                        sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. Lorem ipsum
-                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. Lorem ipsum
-                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. Lorem ipsum
-                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. Lorem ipsum
-                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. Lorem ipsum
-                        dolor sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi. recusandae
-                        porro, tenetur eveniet optio. Quas distinctio cumque
-                        molestias! Modi non quas excepturi. Lorem ipsum dolor
-                        sit amet, consectetur adipisicing elit. Odit nisi,
-                        asperiores voluptatum eum nihil quisquam aut distinctio
-                        recusandae porro, tenetur eveniet optio. Quas distinctio
-                        cumque molestias! Modi non quas excepturi.
+                    <div className="relative z-60 mix-blend-difference invert-[100]">
+                        <ContentLink href="/tickets">Buy Tickets</ContentLink>
+                        <ContentLink href="/tickets">Buy Pass</ContentLink>
+                    </div>
+                    <div className="relative z-60 flex flex-col mt-auto text-[1.25rem] border-y border-black divide-y divide-black mix-blend-difference invert-[100] pointer-events-none">
+                        <div>les instants chavirÉs</div>
+                        <div>7, rue richard lenoir</div>
+                        <div>93100 montreuil</div>
+                    </div>
+                    <div className="absolute top-0 left-0 z-50 w-full h-[100svh] overflow-y-auto">
+                        <div className="h-[100svh]"></div>
+                        <div className="relative flex flex-col gap-32 z-60">
+                            {artists[0].friday.artists.map((artist) => (
+                                <div key={artist.name} className="relative m-4">
+                                    <img src={artist.image} alt="" />
+                                    <div
+                                        style={{
+                                            backgroundColor:
+                                                colors[randomColor][14][1]
+                                        }}
+                                        className={
+                                            "absolute top-0 left-0 w-full h-full mix-blend-color p-4"
+                                        }
+                                    ></div>
+                                    <MenuLabel
+                                        className={
+                                            "absolute bottom-6 left-1/2 -translate-x-1/2"
+                                        }
+                                    >
+                                        {artist.name}
+                                    </MenuLabel>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="h-[50svh]"></div>
                     </div>
                 </div>
                 <div
                     id="saturday"
                     className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
                 >
-                    <MenuLabel>Saturday</MenuLabel>
-                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                    <MenuLabel
+                        className={
+                            "relative z-60 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
+                        Saturday
+                    </MenuLabel>
+                    <div
+                        className={
+                            "relative z-60 galgo text-[11.25rem] leading-[70%] mt-8 border-b mb-8 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
                         01.26. <br />
                         2025
+                    </div>
+                    <div className="relative z-60 mix-blend-difference invert-[100]">
+                        <ContentLink href="/tickets">Buy Tickets</ContentLink>
+                        <ContentLink href="/tickets">Buy Pass</ContentLink>
+                    </div>
+                    <div className="relative z-60 flex flex-col mt-auto text-[1.25rem] border-y border-black divide-y divide-black mix-blend-difference invert-[100] pointer-events-none">
+                        <div>le petit bain</div>
+                        <div>7, Port de la Garer</div>
+                        <div>75013 Paris</div>
+                    </div>
+                    <div className="absolute top-0 left-0 z-50 w-full h-[100svh] overflow-y-auto">
+                        <div className="h-[100svh]"></div>
+                        <div className="relative flex flex-col gap-32 z-60">
+                            {artists[0].saturday.artists.map((artist) => (
+                                <div key={artist.name} className="relative m-4">
+                                    <img src={artist.image} alt="" />
+                                    <div
+                                        style={{
+                                            backgroundColor:
+                                                colors[randomColor][14][1]
+                                        }}
+                                        className={
+                                            "absolute top-0 left-0 w-full h-full mix-blend-color p-4"
+                                        }
+                                    ></div>
+                                    <MenuLabel
+                                        className={
+                                            "absolute bottom-6 left-1/2 -translate-x-1/2"
+                                        }
+                                    >
+                                        {artist.name}
+                                    </MenuLabel>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="h-[50svh]"></div>
                     </div>
                 </div>
                 <div
                     id="sunday"
                     className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
                 >
-                    <MenuLabel>Sunday</MenuLabel>
-                    <div className={"galgo text-[11.25rem] leading-[70%] mt-8"}>
+                    <MenuLabel
+                        className={
+                            "relative z-60 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
+                        Sunday
+                    </MenuLabel>
+                    <div
+                        className={
+                            "relative z-60 galgo text-[11.25rem] leading-[70%] mt-8 border-b mb-8 mix-blend-difference invert-[100] pointer-events-none"
+                        }
+                    >
                         01.27. <br />
                         2025
+                    </div>
+                    <div className="relative z-60 mix-blend-difference invert-[100]">
+                        <ContentLink href="/tickets">Buy Tickets</ContentLink>
+                        <ContentLink href="/tickets">Buy Pass</ContentLink>
+                    </div>
+                    <div className="relative z-60 flex flex-col mt-auto text-[1.25rem] border-y border-black divide-y divide-black mix-blend-difference invert-[100] pointer-events-none">
+                        <div>lafayette anticipations</div>
+                        <div>9 Rue du Plâtre</div>
+                        <div>75004 Paris</div>
+                    </div>
+                    <div className="absolute top-0 left-0 z-50 w-full h-[100svh] overflow-y-auto">
+                        <div className="h-[100svh]"></div>
+                        <div className="relative flex flex-col gap-32 z-60">
+                            {artists[0].sunday.artists.map((artist) => (
+                                <div key={artist.name} className="relative m-4">
+                                    <img src={artist.image} alt="" />
+                                    <div
+                                        style={{
+                                            backgroundColor:
+                                                colors[randomColor][14][1]
+                                        }}
+                                        className={
+                                            "absolute top-0 left-0 w-full h-full mix-blend-color p-4"
+                                        }
+                                    ></div>
+                                    <MenuLabel
+                                        className={
+                                            "absolute bottom-6 left-1/2 -translate-x-1/2"
+                                        }
+                                    >
+                                        {artist.name}
+                                    </MenuLabel>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="h-[50svh]"></div>
                     </div>
                 </div>
                 <div
                     id="tickets"
-                    className="pointer-events-none opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
+                    className="pointer-events-none overflow-y-auto opacity-0 p-4 fixed top-0 left-1/2 -translate-x-1/2 w-5/7 h-[100svh] bg-white z-5 transition-transform duration-1000 flex flex-col"
                 >
-                    <MenuLabel>Tickets & Infos</MenuLabel>
+                    <ContentLink href="/tickets">Buy Tickets</ContentLink>
+                    <ContentLink href="/tickets">Buy Pass</ContentLink>
+                    <div className="relative z-60 flex flex-col mt-24 text-[1.25rem] border-y border-black divide-y divide-black">
+                        <div>oto nove fest</div>
+                        <div>January 25 to 27, 2025</div>
+                        <div>Paris</div>
+                    </div>
+                    <p className="my-4 normal-case text-[1.25rem] leading-tight">
+                        Oto Nove is an experimental website inspired by a
+                        festival dedicated to improvised, experimental, and
+                        noise music. Imagined as a bold, immersive event, it
+                        brings together avant-garde artists and collectives from
+                        around the world. Oto Nove reimagines venues like Les
+                        Instants Chavirés, Le Petit Bain, and Lafayette
+                        Anticipations as stages for concerts, performances, and
+                        sound experiments. The festival invites audiences to
+                        explore the intersections of sound, light, and space,
+                        blending visual codes with the aesthetics of
+                        experimental music scenes.
+                    </p>
+                    <p className="pt-4 normal-case border-t border-black text-[1.25rem] leading-tight">
+                        This project is a playground for graphic and interactive
+                        exploration, where all content is entirely fictitious.
+                        It serves as a conceptual space to test visual systems,
+                        interaction patterns, and creative boundaries in digital
+                        design.
+                        <br />
+                        <br />
+                        Design by{" "}
+                        <a
+                            target="_blank"
+                            className="underline underline-offset-4"
+                            href="https://cynthiajego.com"
+                        >
+                            Cynthia Jego
+                        </a>
+                        .
+                        <br />
+                        Code by{" "}
+                        <a
+                            target="_blank"
+                            className="underline underline-offset-4"
+                            href="https://studiokhi.com"
+                        >
+                            Studio Khi
+                        </a>
+                        .
+                    </p>
+                </div>
+                <div className="fixed z-10 flex flex-row bottom-4 right-4 w-fit h-fit">
+                    <div
+                        className={
+                            "text-center cursor-pointer w-fit select-none z-400 text-[1rem] uppercase px-[0.62rem] bg-transparent rounded-[0.375rem] border text-white border-white hover:bg-white hover:text-black transition-colors duration-1000 whitespace-nowrap rotate-180"
+                        }
+                        style={{ writingMode: "vertical-lr" }}
+                    >
+                        Sound experience only on desktop
+                    </div>
                 </div>
             </section>
 
@@ -697,30 +949,42 @@ export default function Grid() {
                 <Column
                     active={active.tickets}
                     day={"tickets"}
-                    content={"oto nove  / January 25 to 27, 2025 / paris"}
+                    content={"oto nove fest / January 25 to 27, 2025 / paris"}
                     onClick={() => handleClick("tickets")}
                     menu={4}
                     translateX={translateX.tickets}
                     translateY={translateY}
                     color={colors[randomColor][16]}
                 >
-                    Oto Nove is a festival dedicated to improvised,
-                    experimental, and noise music, uniting forward-thinking
-                    artists and collectives from around the world. This edition
-                    marks its debut in Marseille after previous installments in
-                    Geneva and Berlin. In January 2025, Oto Nove will transform
-                    venues like Les Instants Chavirés, Le Petit Bain and
-                    Lafayette Anticipations into immersive stages for
-                    avant-garde concerts, performances, and sound experiments.
-                    Over three days, the festival invites audiences to
-                    experience bold artistic expressions that push the
-                    boundaries of sound, light, and space.
+                    Oto Nove is an experimental website inspired by a festival
+                    dedicated to improvised, experimental, and noise music.
+                    Imagined as a bold, immersive event, it brings together
+                    avant-garde artists and collectives from around the world.
+                    Oto Nove reimagines venues like Les Instants Chavirés, Le
+                    Petit Bain, and Lafayette Anticipations as stages for
+                    concerts, performances, and sound experiments. The festival
+                    invites audiences to explore the intersections of sound,
+                    light, and space, blending visual codes with the aesthetics
+                    of experimental music scenes.
                     <div className="w-full py-5 mb-5 border-b border-black"></div>
-                    Oto Nove is a graphic experimentation by Studio Khi. <br />
-                    This digital experience explores the intersection of visual
-                    and sound perception. <br />
+                    This project is a playground for graphic and interactive
+                    exploration, where all content is entirely fictitious. It
+                    serves as a conceptual space to test visual systems,
+                    interaction patterns, and creative boundaries in digital
+                    design. Design by Cynthia Jego. Code by Studio Khi. <br />
                     <br />
-                    Design & Code by{" "}
+                    Design by{" "}
+                    <a
+                        className={
+                            "underline underline-offset-4 pointer-events-auto select-none"
+                        }
+                        href="https://cynthiajego.com"
+                        target={"_blank"}
+                    >
+                        Cynthia Jego
+                    </a>
+                    <br />
+                    Code by{" "}
                     <a
                         className={
                             "underline underline-offset-4 pointer-events-auto select-none"
@@ -733,15 +997,26 @@ export default function Grid() {
                     . <br />
                     Original Soundtrack by Stefan Lancelot.
                 </Column>
+
                 <div
-                    ref={playRef}
-                    onClick={playAudio}
-                    className={
-                        "fixed -bottom-full right-[1.94vw] cursor-pointer select-none z-400 text-[1.25vw] uppercase px-[0.62vw] bg-white rounded-[0.375vw] border border-black whitespace-nowrap rotate-180"
-                    }
-                    style={{ writingMode: "vertical-lr" }}
+                    ref={containerRef}
+                    className="fixed -bottom-full right-[1.94vw] z-400 flex flex-row w-fit h-fit"
                 >
-                    Sound on
+                    <canvas
+                        className="-rotate-90"
+                        ref={canvasRef}
+                        style={{ display: "block" }}
+                    />
+                    <div
+                        ref={playRef}
+                        onClick={playAudio}
+                        className={
+                            "text-center h-[10vw] cursor-pointer w-fit select-none z-400 text-[1.25vw] uppercase px-[0.62vw] bg-transparent rounded-[0.375vw] border text-white border-white hover:bg-white hover:text-black transition-colors duration-1000 whitespace-nowrap rotate-180"
+                        }
+                        style={{ writingMode: "vertical-lr" }}
+                    >
+                        Play sound
+                    </div>
                 </div>
                 <audio ref={audioRef} src="/sounds/loop.wav" loop></audio>
                 <audio

@@ -40,7 +40,7 @@ function NotFound() {
         <>
             <div className={"block"}>
                 <div className="fixed bottom-[1vw] left-[1vw] leading-[55%] pt-12 text-[11.25rem] lg:text-[22vw] galgo uppercase z-300 text-white">
-                    Error 404
+                    Sold Out
                 </div>
                 <a
                     href="/"

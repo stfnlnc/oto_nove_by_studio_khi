@@ -2,6 +2,7 @@ import Home from "./Home.jsx";
 import Label from "./components/Label.jsx";
 import { Route, Routes } from "react-router";
 import NotFound from "./NotFound.jsx";
+import Tickets from "./Tickets.jsx";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 
@@ -31,7 +32,7 @@ function App() {
     return (
         <>
             <Label className="label"></Label>
-            <div className="fixed top-0 left-0 w-full h-[100lvh] z-500 grid grid-cols-17 pointer-events-none">
+            <div className="fixed top-0 left-0 w-full h-[100lvh] z-500 grid grid-cols-7 lg:grid-cols-17 pointer-events-none">
                 <div className="w-full h-[100lvh] bg-white transitions translate-y-full"></div>
                 <div className="w-full h-[100lvh] bg-white transitions translate-y-full"></div>
                 <div className="w-full h-[100lvh] bg-white transitions translate-y-full"></div>
@@ -52,6 +53,7 @@ function App() {
             </div>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/tickets" element={<Tickets />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </>

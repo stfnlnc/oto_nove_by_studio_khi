@@ -11,7 +11,7 @@ export default function Loader() {
                     className={"label-container relative"}
                 >
                     <img
-                        className="loader h-[30vw] lg:h-[13vw] pointer-events-auto"
+                        className="loader h-[30vw] lg:h-[18vw] pointer-events-auto"
                         src="oto.svg"
                         alt=""
                         style={{ clipPath: "inset(100% 0% 0% 0%)" }}
@@ -22,7 +22,7 @@ export default function Loader() {
                     className={"label-container relative"}
                 >
                     <img
-                        className="loader h-[30vw] lg:h-[13vw] pointer-events-auto"
+                        className="loader h-[30vw] lg:h-[18vw] pointer-events-auto"
                         src="nove.svg"
                         alt=""
                         style={{ clipPath: "inset(100% 0% 0% 0%)" }}
@@ -33,7 +33,7 @@ export default function Loader() {
                     className={"label-container relative"}
                 >
                     <img
-                        className="loader h-[30vw] lg:h-[13vw] pointer-events-auto"
+                        className="loader h-[30vw] lg:h-[18vw] pointer-events-auto"
                         src="fest.svg"
                         alt=""
                         style={{ clipPath: "inset(100% 0% 0% 0%)" }}

@@ -30,7 +30,7 @@ export default function Column({
                 {day && (
                     <div
                         className={
-                            "column__title absolute top-4 lg:top-[1.25vw] w-fit text-left left-1/2 uppercase text-xl xl:text-[1.25vw] text-white -rotate-180 z-30 -translate-x-1/2 transition-all duration-1000 pointer-events-none"
+                            "column__title absolute top-4 lg:top-[1.25vw] w-fit text-left left-1/2 uppercase text-xl lg:text-[1.25vw] text-white -rotate-180 z-30 -translate-x-1/2 transition-all duration-1000 pointer-events-none"
                         }
                         style={{
                             writingMode: "vertical-rl",
